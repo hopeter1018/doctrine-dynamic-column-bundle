@@ -1,0 +1,26 @@
+{
+    "name": "hopeter1018/doctrine-dynamic-column-bundle",
+    "description": "This bundle add doctrine Dynamic Column",
+    "keywords": ["Symfony", "Bundle", "Doctrine", "Dynamic Column", "Sonata Admin", "Api Platform"],
+    "version": "1.0.2",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Peter",
+            "email": "hokwaichi@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "HoPeter1018\\DoctrineDynamicColumnBundle\\": ""
+        }
+    },
+    "require": {
+    },
+    "require-dev": {
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

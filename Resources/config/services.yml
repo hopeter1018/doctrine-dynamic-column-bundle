@@ -1,0 +1,29 @@
+services:
+  _defaults:
+      autowire: true
+      autoconfigure: true
+      public: false
+
+  HoPeter1018\DoctrineDynamicColumnBundle\EventListener\DynamicColumnSubscriber:
+    tags:
+      - { name: doctrine.event_listener, event: loadClassMetadata }
+      - { name: doctrine.event_listener, event: postLoad }
+      - { name: doctrine.event_listener, event: preRemove }
+
+  HoPeter1018\DoctrineDynamicColumnBundle\Repository\DynamicColumnDataRepository:
+      class: HoPeter1018\DoctrineDynamicColumnBundle\Repository\DynamicColumnDataRepository
+
+  HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm\MappingCache:
+      class: HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm\MappingCache
+      arguments:
+          - "%kernel.cache_dir%"
+          - "%kernel.debug%"
+
+  HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm\MappingCacheWarmUp:
+      class: HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm\MappingCacheWarmUp
+      arguments:
+          - []
+          - "@Doctrine\\Common\\Persistence\\ManagerRegistry"
+          - "@HoPeter1018\\DoctrineDynamicColumnBundle\\CacheWarm\\MappingCache"
+      tags:
+          - { name: kernel.cache_warmer, priority: 0 }
