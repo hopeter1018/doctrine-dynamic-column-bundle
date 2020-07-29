@@ -22,6 +22,9 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->scalarNode('class')
+                    ->defaultValue('HoPeter1018\DoctrineDynamicColumnBundle\Entity\DynamicColumnData')
+                ->end()
                 ->arrayNode('managers')
                     ->defaultValue([])->prototype('scalar')->end()
                 ->end()

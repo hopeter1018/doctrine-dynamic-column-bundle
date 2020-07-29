@@ -2,9 +2,10 @@
 
 namespace HoPeter1018\DoctrineDynamicColumnBundle\DependencyInjection;
 
-use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\DynamicColumnEntity;
-use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\DynamicColumnProperty;
+use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\Column;
+use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\Entity;
 use HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm\MappingCacheWarmUp;
+use HoPeter1018\DoctrineDynamicColumnBundle\EventListener\DynamicColumnSubscriber;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader;
@@ -31,9 +32,12 @@ class HoPeter1018DoctrineDynamicColumnExtension extends Extension
         $serviceDefintion = $container->getDefinition(MappingCacheWarmUp::class);
         $serviceDefintion->setArgument(0, $config);
 
+        $serviceDefintion = $container->getDefinition(DynamicColumnSubscriber::class);
+        $serviceDefintion->setArgument(0, $config);
+
         $this->addAnnotatedClassesToCompile([
-            DynamicColumnEntity::class,
-            DynamicColumnProperty::class,
+            Entity::class,
+            Column::class,
         ]);
     }
 }

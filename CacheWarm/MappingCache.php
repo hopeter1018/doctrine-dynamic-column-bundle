@@ -10,8 +10,8 @@ namespace HoPeter1018\DoctrineDynamicColumnBundle\CacheWarm;
 
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Persistence\ManagerRegistry;
-use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\DynamicColumnEntity;
-use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\DynamicColumnProperty;
+use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\Column;
+use HoPeter1018\DoctrineDynamicColumnBundle\Annotation\Entity;
 use ReflectionClass;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\Resource\FileResource;
@@ -38,12 +38,11 @@ class MappingCache
         $this->annotationReader = $annotationReader;
     }
 
-    public function rules($manager, string $entityFqcn)
+    public function load($metadata)
     {
-        // $manager = $this->managerRegistry->getManagerForClass($entityFqcn);
-        $metadata = $manager->getMetadataFactory()->getMetadataFor($entityFqcn);
-
+        $entityFqcn = $metadata->name;
         $filename = $this->cacheFolder.'/hopeter1018/doctrine-dynamic-column/'.str_replace('\\', '-', $entityFqcn).md5($entityFqcn);
+
         $cache = new ConfigCache($filename, $this->debug);
         if (!$cache->isFresh()) {
             $resources = [];
@@ -52,9 +51,11 @@ class MappingCache
                 $resources[] = new FileResource($reflection->getFileName());
             }
 
-            $rules = $this->getRulesOfEntityClass($manager, $metadata);
-            if (0 === count($rules)) {
+            $rules = $this->getRulesOfEntityClass($metadata);
+            if (0 === count($rules) or 0 === count($rules['columns'])) {
                 $rules = null;
+            } else {
+                dump($rules);
             }
 
             $cache->write(serialize($rules), $resources);
@@ -63,33 +64,40 @@ class MappingCache
         return unserialize(file_get_contents($filename));
     }
 
-    public function getRulesOfEntityClass($manager, $metadata)
+    public function getRulesOfEntityClass($metadata)
     {
-        $rules = [];
-        $classAnno = $this->annotationReader->getClassAnnotation($metadata->reflClass, DynamicColumnEntity::class);
         $entityFqcn = $metadata->reflClass->name;
-        $prefix = sprintf('%s-', $entityFqcn);
-        if ('DigPro\ErpV1Bundle\Entity\TQuotation' === $entityFqcn) {
-            dump($metadata->getIdentifierFieldNames());
-            dump($metadata->getFieldMapping($metadata->getIdentifierFieldNames()[0]));
+        $classAnno = $this->annotationReader->getClassAnnotation($metadata->reflClass, Entity::class);
 
-            dump($classAnno);
-        }
-        if (null !== $classAnno) {
-            foreach ($classAnno->columns as $name => $ormColumn) {
-                $rules[$prefix.$name] = [
-                    'entity_class' => $entityFqcn,
-                ];
-                static::parseRule($rules[$prefix.$name]);
+        $rules = [];
+        if (1 === count($metadata->getIdentifierFieldNames())) {
+            $rules = [
+              'id' => [
+                'name' => $metadata->getIdentifierFieldNames()[0],
+                'type' => $metadata->getFieldMapping($metadata->getIdentifierFieldNames()[0])['type'],
+              ],
+              'columns' => [],
+            ];
+            if (null !== $classAnno) {
+                foreach ($classAnno->columns as $name => $column) {
+                    $fieldName = $column->name ? $column->name : $name;
+                    $rules['columns'][$fieldName] = [
+                        'entity_class' => $entityFqcn,
+                        'column' => $column,
+                    ];
+                    static::parseRule($rules['columns'][$fieldName]);
+                }
             }
-        }
-        foreach ($metadata->reflClass->getProperties() as $property) {
-            $propAnno = $this->annotationReader->getPropertyAnnotation($property, DynamicColumnProperty::class);
-            if (null !== $propAnno) {
-                $rules[$prefix.$property->name] = [
-                    'entity_class' => $entityFqcn,
-                ];
-                static::parseRule($rules[$prefix.$property->name]);
+            foreach ($metadata->reflClass->getProperties() as $property) {
+                $column = $this->annotationReader->getPropertyAnnotation($property, Column::class);
+                if (null !== $column) {
+                    $fieldName = $column->name ? $column->name : $name;
+                    $rules['columns'][$fieldName] = [
+                        'entity_class' => $entityFqcn,
+                        'column' => $column,
+                    ];
+                    static::parseRule($rules['columns'][$fieldName]);
+                }
             }
         }
 

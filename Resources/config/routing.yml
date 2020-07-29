@@ -1,0 +1,3 @@
+# ho_peter1018_doctrine_dynamic_column_homepage:
+#     path:     /
+#     defaults: { _controller: HoPeter1018DoctrineDynamicColumnBundle:Default:index }

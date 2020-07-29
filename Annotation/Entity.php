@@ -8,8 +8,12 @@ use Doctrine\Common\Annotations\Target;
 
 /**
  * @Annotation
- * @Target({"PROPERTY"})
+ * @Target({"CLASS"})
  */
-final class DynamicColumnProperty
+final class Entity
 {
+    /**
+     * @var \HoPeter1018\DoctrineDynamicColumnBundle\Annotation\Column[]
+     */
+    public $columns = [];
 }

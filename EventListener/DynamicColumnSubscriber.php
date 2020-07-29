@@ -10,6 +10,7 @@ namespace HoPeter1018\DoctrineDynamicColumnBundle\EventListener;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\EventSubscriber;
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Events;
@@ -21,6 +22,12 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 class DynamicColumnSubscriber implements EventSubscriber
 {
     const ANNOTATION_ENTITY = DynamicColumnEntity::class;
+
+    /** @var array */
+    protected $config;
+
+    /** @var ManagerRegistry */
+    protected $managerRegistry;
 
     /** @var AnnotationReader */
     protected $annotationReader;
@@ -34,12 +41,13 @@ class DynamicColumnSubscriber implements EventSubscriber
     /** @var DynamicColumnDataRepository */
     protected $dynamicColumnDataRepository;
 
-    public function __construct(AnnotationReader $annotationReader, PropertyAccessorInterface $propertyAccessor, MappingCache $mappingCache, DynamicColumnDataRepository $dynamicColumnDataRepository)
+    public function __construct(array $config, ManagerRegistry $managerRegistry, AnnotationReader $annotationReader, PropertyAccessorInterface $propertyAccessor, MappingCache $mappingCache)
     {
+        $this->config = $config;
+        $this->managerRegistry = $managerRegistry;
         $this->annotationReader = $annotationReader;
         $this->propertyAccessor = $propertyAccessor;
         $this->mappingCache = $mappingCache;
-        $this->dynamicColumnDataRepository = $dynamicColumnDataRepository;
     }
 
     /**
@@ -51,10 +59,14 @@ class DynamicColumnSubscriber implements EventSubscriber
     {
         return [
             Events::loadClassMetadata,
+            // Create
+            Events::postPersist,
+            // Read
             Events::postLoad,
-            // Events::preRemove,
-            // Events::postPersist,
-            // Events::postUpdate,
+            // Update
+            Events::postUpdate,
+            // Delete
+            Events::preRemove,
         ];
     }
 
@@ -63,14 +75,66 @@ class DynamicColumnSubscriber implements EventSubscriber
         return;
     }
 
-    public function postLoad(LifecycleEventArgs $event)
+    public function postPersist(LifecycleEventArgs $event)
     {
-        $rulesByAnno = $this->mappingCache->rules($event->getObjectManager(), get_class($event->getObject()));
+        $em = $event->getObjectManager();
+        $entityFqcn = get_class($event->getObject());
+        $rulesByAnno = $this->mappingCache->load($em->getClassMetadata($entityFqcn));
 
         if (null !== $rulesByAnno) {
-            $event->getObject()->setDynamicColumnDataRepository($this->dynamicColumnDataRepository);
+            $event->getObject()
+                ->setDynamicColumnAnno($rulesByAnno)
+                ->setDynamicColumnDataRepository($this->getDynamicColumnDataRepository())
+            ;
+            $this->getDynamicColumnDataRepository()->postPersist($em, $event->getObject());
+        }
+    }
+
+    public function postUpdate(LifecycleEventArgs $event)
+    {
+        $em = $event->getObjectManager();
+        $entityFqcn = get_class($event->getObject());
+        $rulesByAnno = $this->mappingCache->load($em->getClassMetadata($entityFqcn));
+
+        if (null !== $rulesByAnno) {
+            $event->getObject()
+                ->setDynamicColumnAnno($rulesByAnno)
+            ;
+            $this->getDynamicColumnDataRepository()->postUpdate($em, $event->getObject());
+        }
+    }
+
+    public function preRemove(LifecycleEventArgs $event)
+    {
+        $em = $event->getObjectManager();
+        $entityFqcn = get_class($event->getObject());
+        $rulesByAnno = $this->mappingCache->load($em->getClassMetadata($entityFqcn));
+
+        if (null !== $rulesByAnno) {
+            $this->getDynamicColumnDataRepository()->preRemove($em, $event->getObject());
+        }
+    }
+
+    public function postLoad(LifecycleEventArgs $event)
+    {
+        $em = $event->getObjectManager();
+        $entityFqcn = get_class($event->getObject());
+        $rulesByAnno = $this->mappingCache->load($em->getClassMetadata($entityFqcn));
+
+        if (null !== $rulesByAnno) {
+            $event->getObject()
+                ->setDynamicColumnAnno($rulesByAnno)
+                ->setDynamicColumnDataRepository($this->getDynamicColumnDataRepository())
+            ;
+        }
+    }
+
+    protected function getDynamicColumnDataRepository()
+    {
+        if (null === $this->dynamicColumnDataRepository) {
+            $this->dynamicColumnDataRepository = $this->managerRegistry->getManagerForClass($this->config['class'])->getRepository($this->config['class']);
         }
 
-        return;
+        return $this->dynamicColumnDataRepository;
     }
 }
