@@ -15,7 +15,7 @@ trait DynamicColumnTrait
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="dynamic_column_updated", type="datetime")
+     * @ORM\Column(name="dynamic_column_updated", type="datetime", nullable=true)
      */
     protected $dynamicColumnUpdated;
 

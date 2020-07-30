@@ -56,15 +56,6 @@ class DynamicColumnDataRepository extends ServiceEntityRepository
             $dcd->setField($field);
             $value = $entity->getNewDatas()[$field];
             $this->updateDcd($anno, $field, $dcd, $value);
-            // switch ($anno['columns'][$field]['column']->type) {
-            //     case 'string': $newDcD->setDataString($entity->getNewDatas()[$field]); break;
-            //     case 'text': $newDcD->setDataText($entity->getNewDatas()[$field]); break;
-            //     case 'integer': $newDcD->setDataInteger($entity->getNewDatas()[$field]); break;
-            //     case 'decimal': $newDcD->setDataDecimal($entity->getNewDatas()[$field]); break;
-            //     case 'boolean': $newDcD->setDataInteger($entity->getNewDatas()[$field]); break;
-            //     case 'date': $newDcD->setDataDatetime($entity->getNewDatas()[$field]); break;
-            //     case 'datetime': $newDcD->setDataDatetime($entity->getNewDatas()[$field]); break;
-            // }
             $dcd->setCreated(new DateTime());
             $dcd->setUpdated(new DateTime());
             $em->persist($dcd);
