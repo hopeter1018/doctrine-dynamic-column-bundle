@@ -55,7 +55,7 @@ class MappingCache
             if (0 === count($rules) or 0 === count($rules['columns'])) {
                 $rules = null;
             } else {
-                dump($rules);
+                // dump($rules);
             }
 
             $cache->write(serialize($rules), $resources);
