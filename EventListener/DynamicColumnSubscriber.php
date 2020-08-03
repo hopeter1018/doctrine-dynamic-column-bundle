@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace HoPeter1018\DoctrineDynamicColumnBundle\EventListener;
 
-use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\ORM\Event\LifecycleEventArgs;
@@ -29,7 +29,7 @@ class DynamicColumnSubscriber implements EventSubscriber
     /** @var ManagerRegistry */
     protected $managerRegistry;
 
-    /** @var AnnotationReader */
+    /** @var Reader */
     protected $annotationReader;
 
     /** @var PropertyAccessorInterface */
@@ -41,7 +41,7 @@ class DynamicColumnSubscriber implements EventSubscriber
     /** @var DynamicColumnDataRepository */
     protected $dynamicColumnDataRepository;
 
-    public function __construct(array $config, ManagerRegistry $managerRegistry, AnnotationReader $annotationReader, PropertyAccessorInterface $propertyAccessor, MappingCache $mappingCache)
+    public function __construct(array $config, ManagerRegistry $managerRegistry, Reader $annotationReader, PropertyAccessorInterface $propertyAccessor, MappingCache $mappingCache)
     {
         $this->config = $config;
         $this->managerRegistry = $managerRegistry;

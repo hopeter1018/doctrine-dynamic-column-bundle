@@ -2,7 +2,7 @@
     "name": "hopeter1018/doctrine-dynamic-column-bundle",
     "description": "This bundle add doctrine Dynamic Column",
     "keywords": ["Symfony", "Bundle", "Doctrine", "Dynamic Column", "Sonata Admin", "Api Platform"],
-    "version": "1.0.3",
+    "version": "1.0.4",
     "license": "MIT",
     "authors": [
         {
